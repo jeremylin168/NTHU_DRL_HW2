@@ -19,7 +19,7 @@ import random
 class Agent():
     def __init__(self):
 
-        #self.device = torch.device("cpu")
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
         # basic parameters
         self.action_range = 12
@@ -41,7 +41,7 @@ class Agent():
 
 
         # Networks
-        self.target_Network = DQN_Model()#.to(self.device)
+        self.target_Network = DQN_Model().to(self.device)
         #self.training_Network = DQN_Model().to(self.device)
         #self.loss_function = nn.MSELoss()
 
@@ -70,8 +70,8 @@ class Agent():
             self.state_buffer[1:, :, :] = self.state_buffer[:-1, :, :]
             self.state_buffer[0, :, :] = n_state
 
-            x = torch.tensor(np.reshape(self.state_buffer, (1, 4, 84, 84)), dtype=torch.float32)
-            self.action_buffer = torch.argmax(self.target_Network(x), 1).numpy()[0]
+            x = torch.tensor(np.reshape(self.state_buffer, (1, 4, 84, 84)), dtype=torch.float32).to(self.device)
+            self.action_buffer = torch.argmax(self.target_Network(x), 1).cpu().numpy()[0]
 
             action = self.action_buffer
             self.skip_frame_counter = 0
@@ -137,7 +137,7 @@ class Agent():
 
     def load_weight(self, path):
         #self.training_Network.load_state_dict(torch.load(path))
-        self.target_Network.load_state_dict(torch.load(path))
+        self.target_Network.load_state_dict(torch.load(path, map_location=self.device))
     
 
 class DQN_Model(nn.Module):
