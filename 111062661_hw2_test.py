@@ -23,7 +23,7 @@ class Agent():
 
         # basic parameters
         self.action_range = 12
-        self.epsilon = 0.1
+        self.epsilon = 0.02
 
 
         self.learning_rate = 3e-4
@@ -69,9 +69,11 @@ class Agent():
 
             self.state_buffer[1:, :, :] = self.state_buffer[:-1, :, :]
             self.state_buffer[0, :, :] = n_state
-
-            x = torch.tensor(np.reshape(self.state_buffer, (1, 4, 84, 84)), dtype=torch.float32).to(self.device)
-            self.action_buffer = torch.argmax(self.target_Network(x), 1).cpu().numpy()[0]
+            if np.random.uniform() < self.epsilon:
+                self.action_buffer = np.random.randint(0, self.action_range)
+            else:
+                x = torch.tensor(np.reshape(self.state_buffer, (1, 4, 84, 84)), dtype=torch.float32).to(self.device)
+                self.action_buffer = torch.argmax(self.target_Network(x), 1).cpu().numpy()[0]
 
             action = self.action_buffer
             self.skip_frame_counter = 0
